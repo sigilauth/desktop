@@ -1,0 +1,13 @@
+#!/bin/sh
+# postrm — run after Debian package removal.
+set -e
+
+if [ -d /usr/share/glib-2.0/schemas ] && command -v glib-compile-schemas >/dev/null; then
+    glib-compile-schemas /usr/share/glib-2.0/schemas || true
+fi
+
+if command -v update-desktop-database >/dev/null; then
+    update-desktop-database -q /usr/share/applications || true
+fi
+
+exit 0

@@ -1,0 +1,46 @@
+# Local + CI parity dev image for Sigil Auth Linux desktop.
+#
+# Build: docker build -f Dockerfile.dev -t sigil-linux-dev:ubuntu-24.04 .
+# Run:   ./test-in-container.sh
+FROM ubuntu:24.04
+
+ENV DEBIAN_FRONTEND=noninteractive \
+    PATH="/root/.cargo/bin:${PATH}" \
+    CARGO_HOME=/usr/local/cargo \
+    RUSTUP_HOME=/usr/local/rustup
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    # Rust toolchain
+    curl ca-certificates build-essential pkg-config \
+    # GTK4 + libadwaita
+    libgtk-4-dev libadwaita-1-dev \
+    # libsecret
+    libsecret-1-dev \
+    # TPM 2.0
+    libtss2-dev swtpm swtpm-tools tpm2-tools \
+    # YubiKey PIV
+    libpcsclite-dev pcscd \
+    # Build systems
+    meson ninja-build \
+    # Desktop integration validators
+    desktop-file-utils appstream \
+    # Test daemons
+    gnome-keyring dbus-x11 xvfb \
+    # Packaging
+    dpkg-dev rpm \
+    # Coverage
+    llvm \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | \
+    sh -s -- -y --default-toolchain stable --profile minimal \
+         --component clippy --component rustfmt --component llvm-tools-preview
+
+ENV PATH="/usr/local/cargo/bin:${PATH}"
+
+RUN cargo install cargo-deb --locked \
+    && cargo install cargo-generate-rpm --locked \
+    && cargo install cargo-llvm-cov --locked
+
+WORKDIR /work
+CMD ["bash"]

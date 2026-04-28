@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ECDSA P-256 Test Vectors",
+  "description": "Test vectors for ECDSA signing and verification per protocol-spec §1.3",
+  "curve": "P-256 (secp256r1)",
+  "signature_format": "Fixed 64-byte (r || s), low-S normalized per BIP-62",
+  "vectors": [
+    {
+      "name": "Challenge signature verification",
+      "description": "Server signs challenge; device verifies",
+      "private_key_hex": "c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6",
+      "public_key_compressed_hex": "02a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2",
+      "message_components": {
+        "challenge_id": "550e8400-e29b-41d4-a716-446655440000",
+        "fingerprint": "a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2",
+        "challenge_bytes_b64": "SGVsbG8gV29ybGQhIFRoaXMgaXMgYSB0ZXN0IGNoYWxsZW5nZQ==",
+        "action_json": "{\"type\":\"step_up\",\"description\":\"Add WebAuthn key\"}",
+        "timestamp": "2026-04-23T10:00:00Z"
+      },
+      "message_hex": "sha256 of concatenated components",
+      "expected_signature_hex": "placeholder_64_bytes_r_concat_s_low_s_normalized"
+    },
+    {
+      "name": "Device response signature",
+      "description": "Device signs response; server verifies",
+      "private_key_hex": "d7d7d7d7d7d7d7d7d7d7d7d7d7d7d7d7d7d7d7d7d7d7d7d7d7d7d7d7d7d7d7d7",
+      "public_key_compressed_hex": "03b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3",
+      "message_components": {
+        "challenge_id": "550e8400-e29b-41d4-a716-446655440000",
+        "challenge_bytes_b64": "SGVsbG8gV29ybGQhIFRoaXMgaXMgYSB0ZXN0IGNoYWxsZW5nZQ==",
+        "decision": "approved",
+        "timestamp": "2026-04-23T10:01:00Z"
+      }
+    }
+  ],
+  "invalid_signatures": [
+    {
+      "name": "Empty signature",
+      "signature_hex": "",
+      "expected_result": "reject"
+    },
+    {
+      "name": "Truncated signature (32 bytes)",
+      "signature_hex": "0102030405060708091011121314151617181920212223242526272829303132",
+      "expected_result": "reject"
+    },
+    {
+      "name": "Wrong key signature",
+      "description": "Valid signature but from different key",
+      "expected_result": "reject"
+    },
+    {
+      "name": "High-S signature (not normalized)",
+      "description": "S > order/2, should be rejected or normalized",
+      "expected_result": "reject or normalize"
+    }
+  ],
+  "note": "Implementations MUST generate actual test vectors with real P-256 operations."
+}

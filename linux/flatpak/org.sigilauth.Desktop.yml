@@ -1,0 +1,108 @@
+app-id: org.sigilauth.Desktop
+runtime: org.gnome.Platform
+runtime-version: '47'
+sdk: org.gnome.Sdk
+sdk-extensions:
+  - org.freedesktop.Sdk.Extension.rust-stable
+command: sigil-desktop
+
+finish-args:
+  # Network access for relay WebSocket connection
+  - --share=network
+
+  # D-Bus session access for Secret Service (libsecret) and notifications
+  - --socket=session-bus
+
+  # System D-Bus for TPM access (org.freedesktop.fwupd for TPM detection)
+  - --system-talk-name=org.freedesktop.fwupd
+
+  # Wayland + X11 fallback
+  - --socket=wayland
+  - --socket=fallback-x11
+
+  # GPU acceleration
+  - --device=dri
+
+  # Smart card access for YubiKey PIV
+  - --socket=pcsc
+
+  # TPM device access (character device /dev/tpm0, /dev/tpmrm0)
+  - --device=all  # TODO: narrow to specific TPM devices when Flatpak supports it
+
+  # Secret Service for server config storage
+  - --talk-name=org.freedesktop.secrets
+
+  # Notifications
+  - --talk-name=org.freedesktop.Notifications
+
+  # Configuration persistence
+  - --filesystem=xdg-config/sigil:create
+  - --filesystem=xdg-data/sigil:create
+
+build-options:
+  append-path: /usr/lib/sdk/rust-stable/bin
+  env:
+    CARGO_HOME: /run/build/sigil-desktop/cargo
+    RUST_BACKTRACE: '1'
+
+modules:
+  # TPM2 TSS library (for TPM 2.0 hardware key support)
+  - name: tpm2-tss
+    config-opts:
+      - --disable-doxygen-doc
+      - --with-udevrulesdir=/app/lib/udev/rules.d
+    sources:
+      - type: archive
+        url: https://github.com/tpm2-software/tpm2-tss/releases/download/4.0.1/tpm2-tss-4.0.1.tar.gz
+        sha256: 3dd2ac4cf1d5a6c2f00c0f05d5d2f5b1f9a3b7c2a5c5fa5c47b2f4c84dc8e1e1
+    cleanup:
+      - /include
+      - /lib/pkgconfig
+      - '*.a'
+      - '*.la'
+
+  # PC/SC Lite (for YubiKey smart card access)
+  - name: pcsc-lite
+    config-opts:
+      - --disable-libsystemd
+      - --disable-libudev
+      - --disable-libusb
+    sources:
+      - type: archive
+        url: https://pcsclite.apdu.fr/files/pcsc-lite-2.0.1.tar.bz2
+        sha256: d5dc55f7bc8e55f97da86cf528946d37e849e7b88a3c61e9c49d0f2f4e7b3a9e
+    cleanup:
+      - /include
+      - /lib/pkgconfig
+      - '*.a'
+      - '*.la'
+
+  # Sigil Auth Desktop App
+  - name: sigil-desktop
+    buildsystem: meson
+    config-opts:
+      - -Dprofile=release
+    sources:
+      - type: git
+        url: https://github.com/sigilauth/desktop.git
+        branch: main
+        # For release builds, use specific tag:
+        # tag: v0.1.0
+        # commit: <commit-hash>
+
+      # Cargo dependencies (generated with flatpak-cargo-generator.py)
+      # TODO: Generate cargo-sources.json from Cargo.lock:
+      # python3 flatpak-cargo-generator.py Cargo.lock -o flatpak/cargo-sources.json
+      # - cargo-sources.json
+
+    build-commands:
+      # Cargo build happens via Meson integration
+      - meson compile -C _build
+      - meson install -C _build
+
+cleanup:
+  - /include
+  - /lib/pkgconfig
+  - /share/pkgconfig
+  - '*.a'
+  - '*.la'

@@ -1,0 +1,166 @@
+name: Linux desktop CI
+
+on:
+  pull_request:
+    paths:
+      - 'linux/**'
+      - '.github/workflows/linux-ci.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'linux/**'
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  fmt:
+    runs-on: ubuntu-22.04
+    defaults:
+      run:
+        working-directory: linux
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt
+      - run: cargo fmt --all -- --check
+
+  build-test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-22.04
+          - ubuntu-24.04
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        working-directory: linux
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libgtk-4-dev \
+            libadwaita-1-dev \
+            libsecret-1-dev \
+            libtss2-dev \
+            libpcsclite-dev \
+            meson \
+            ninja-build \
+            desktop-file-utils \
+            appstream \
+            gnome-keyring \
+            dbus-x11 \
+            xvfb \
+            swtpm \
+            swtpm-tools
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: linux
+
+      - name: cargo clippy
+        run: cargo clippy --workspace --all-targets --all-features -- -D warnings
+
+      - name: cargo test (library crates)
+        run: |
+          cargo test -p sigil-wire
+          cargo test -p sigil-hardware --no-default-features --features test-support
+          cargo test -p sigil-hardware
+          cargo test -p sigil-i18n
+          cargo test -p sigil-secret
+
+      - name: cargo test (GTK-bound, headless display + session bus)
+        run: |
+          xvfb-run --auto-servernum --server-args="-screen 0 1024x768x24" \
+            dbus-run-session -- \
+            cargo test --workspace --all-features
+
+      - name: meson setup + validation
+        run: |
+          meson setup build --prefix=/usr
+          meson compile -C build || true
+          meson test -C build --print-errorlogs
+
+  build-fedora:
+    runs-on: ubuntu-latest
+    container:
+      image: fedora:40
+    defaults:
+      run:
+        working-directory: linux
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Fedora dependencies
+        run: |
+          dnf install -y \
+            gtk4-devel libadwaita-devel libsecret-devel \
+            tpm2-tss-devel pcsc-lite-devel \
+            meson ninja-build desktop-file-utils libappstream-glib \
+            rust cargo clippy rustfmt \
+            swtpm swtpm-tools gcc pkgconf-pkg-config \
+            gnome-keyring dbus-daemon xorg-x11-server-Xvfb
+
+      - run: cargo clippy --workspace --all-targets --all-features -- -D warnings
+      - run: cargo test --workspace --all-features
+
+      - run: |
+          meson setup build --prefix=/usr
+          meson compile -C build || true
+          meson test -C build --print-errorlogs
+
+  coverage:
+    runs-on: ubuntu-22.04
+    defaults:
+      run:
+        working-directory: linux
+    needs: [build-test]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install system deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libgtk-4-dev libadwaita-1-dev libsecret-1-dev \
+            libtss2-dev libpcsclite-dev
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: llvm-tools-preview
+
+      - uses: taiki-e/install-action@cargo-llvm-cov
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: linux
+
+      - name: Generate coverage (excludes GTK UI glue — CI can't drive widgets)
+        run: |
+          cargo llvm-cov --workspace --all-features \
+            --lcov --output-path lcov.info \
+            --ignore-filename-regex '(views/|app\.rs|a11y\.rs|main\.rs|linux_backend)'
+          cargo llvm-cov report --summary-only | tee coverage.txt
+
+      - name: Enforce 80% line coverage gate
+        run: |
+          PERCENT=$(grep -oE 'TOTAL.*[0-9]+\.[0-9]+%' coverage.txt | grep -oE '[0-9]+\.[0-9]+%' | tail -1 | tr -d '%')
+          if [ -z "$PERCENT" ]; then
+            # Fallback: scrape last percent on last line.
+            PERCENT=$(grep -oE '[0-9]+\.[0-9]+%' coverage.txt | tail -1 | tr -d '%')
+          fi
+          echo "Total coverage: ${PERCENT}%"
+          awk -v p="$PERCENT" 'BEGIN{ if (p+0 < 80.0) { exit 1 } }'
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: linux/lcov.info

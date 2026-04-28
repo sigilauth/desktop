@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "BIP39 Test Vectors",
+  "description": "Test vectors for BIP39 mnemonic generation per protocol-spec §4.9",
+  "wordlist": "english",
+  "entropy_bits": 256,
+  "word_count": 24,
+  "vectors": [
+    {
+      "name": "All zeros entropy",
+      "entropy_hex": "0000000000000000000000000000000000000000000000000000000000000000",
+      "checksum_bits": "00110001",
+      "expected_mnemonic": "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon art"
+    },
+    {
+      "name": "All 0xFF entropy",
+      "entropy_hex": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+      "expected_mnemonic": "zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo vote"
+    },
+    {
+      "name": "Standard test vector 1",
+      "entropy_hex": "68a79eaca2324873eacc50cb9c6eca8cc68ea5d936f98787c60c7ebc74e6ce7c",
+      "expected_mnemonic": "hamster diagram private dutch cause delay private meat slide toddler razor book happy fancy gospel tennis maple dilemma loan word shrug inflict delay length"
+    },
+    {
+      "name": "Round-trip verification",
+      "description": "Generate mnemonic from entropy, derive verification code",
+      "entropy_hex": "0c1e24e5917779d297e14d45f14e1a1a",
+      "mnemonic": "army van defense carry jealous true garbage claim echo media make crunch",
+      "verification_code": "first 6 chars of hex(SHA256(mnemonic_string))",
+      "verification_code_expected": "A7B3C9"
+    }
+  ],
+  "verification_code_algorithm": {
+    "description": "Two-phase verification code derivation",
+    "input": "mnemonic_string (space-separated, lowercase, no trailing whitespace)",
+    "algorithm": "hex(SHA256(mnemonic_string))[0:6].toUpperCase()",
+    "example": {
+      "mnemonic": "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about",
+      "sha256_hex": "c4df....",
+      "verification_code": "C4DF.."
+    }
+  },
+  "note": "BIP39 English wordlist only for MVP per DECISIONS.md"
+}

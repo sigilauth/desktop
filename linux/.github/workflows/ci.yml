@@ -1,0 +1,195 @@
+name: Linux Desktop CI
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'linux/**'
+      - '.github/workflows/linux-ci.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'linux/**'
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  lint:
+    name: Lint (clippy)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+
+      - name: Cache cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            linux/target/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('linux/Cargo.lock') }}
+
+      - name: Run clippy
+        working-directory: linux
+        run: cargo clippy -- -D warnings
+
+  format-check:
+    name: Format Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt
+
+      - name: Check formatting
+        working-directory: linux
+        run: cargo fmt -- --check
+
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            linux/target/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('linux/Cargo.lock') }}
+
+      - name: Install GTK4 dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgtk-4-dev
+
+      - name: Run tests
+        working-directory: linux
+        run: cargo test --all-features
+
+      - name: Generate coverage
+        working-directory: linux
+        run: |
+          cargo install cargo-tarpaulin
+          cargo tarpaulin --out Xml
+
+      - name: Coverage check
+        working-directory: linux
+        run: |
+          # Linux coverage: 75% line / 65% branch (Maren §10)
+          coverage=$(cargo tarpaulin --out Json | jq '.files | to_entries | map(.value.covered / .value.total) | add / length * 100')
+          echo "Coverage: ${coverage}%"
+          if (( $(echo "$coverage < 75.0" | bc -l) )); then
+            echo "Coverage ${coverage}% below threshold 75%"
+            exit 1
+          fi
+
+  tdd-audit:
+    name: TDD Audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Fetch base branch
+        run: git fetch origin main:main || true
+
+      - name: Run TDD audit
+        working-directory: linux
+        run: bash ../../scripts/tdd-audit.sh origin/main
+
+  security:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            linux/target/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('linux/Cargo.lock') }}
+
+      - name: Run cargo audit
+        working-directory: linux
+        run: |
+          cargo install cargo-audit
+          cargo audit
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            linux/target/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('linux/Cargo.lock') }}
+
+      - name: Install GTK4 dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgtk-4-dev
+
+      - name: Build
+        working-directory: linux
+        run: cargo build --release
+
+      - name: Verify binary
+        working-directory: linux
+        run: |
+          test -f target/release/sigil-linux || echo "Binary not found"
+
+  all-checks:
+    name: All Checks Passed
+    needs: [lint, format-check, test, tdd-audit, security, build]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Check all jobs succeeded
+        run: |
+          if [[ "${{ needs.lint.result }}" != "success" ]] || \
+             [[ "${{ needs.format-check.result }}" != "success" ]] || \
+             [[ "${{ needs.test.result }}" != "success" ]] || \
+             [[ "${{ needs.tdd-audit.result }}" != "success" ]] || \
+             [[ "${{ needs.security.result }}" != "success" ]] || \
+             [[ "${{ needs.build.result }}" != "success" ]]; then
+            echo "One or more checks failed"
+            exit 1
+          fi
+          echo "All Linux checks passed!"

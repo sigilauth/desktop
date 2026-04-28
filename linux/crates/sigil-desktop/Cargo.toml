@@ -1,0 +1,108 @@
+[package]
+name = "sigil-desktop"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+description = "Sigil Auth desktop app for Linux (GTK4 + libadwaita)"
+
+[[bin]]
+name = "sigil-desktop"
+path = "src/main.rs"
+
+# ---- cargo-deb -------------------------------------------------------------
+#
+# `cargo deb` builds a Debian package directly from this metadata. Invoked by
+# .github/workflows/release.yml on tag push.
+[package.metadata.deb]
+name = "sigilauth-desktop"
+maintainer = "Sigil Auth contributors <security@sigilauth.com>"
+copyright = "2026 Sigil Auth contributors"
+license-file = ["../../../LICENSE", "4"]
+extended-description = """\
+Sigil Auth is an open-source strong authentication system using hardware-bound
+cryptographic keys. The desktop app holds its signing key in a TPM 2.0 chip or
+YubiKey with the PIV applet; private keys never leave hardware."""
+depends = "$auto, libgtk-4-1 (>= 4.10), libadwaita-1-0 (>= 1.4), libsecret-1-0, libtss2-esys-3.0.2-0, libpcsclite1"
+section = "admin"
+priority = "optional"
+assets = [
+    ["target/release/sigil-desktop", "usr/bin/", "755"],
+    ["../../data/org.sigilauth.Desktop.desktop", "usr/share/applications/", "644"],
+    ["../../data/org.sigilauth.Desktop.metainfo.xml", "usr/share/metainfo/", "644"],
+    ["../../data/org.sigilauth.Desktop.gschema.xml", "usr/share/glib-2.0/schemas/", "644"],
+    ["../../README.md", "usr/share/doc/sigilauth-desktop/README", "644"],
+]
+maintainer-scripts = "../../packaging/debian/"
+
+# ---- cargo-generate-rpm ----------------------------------------------------
+#
+# `cargo generate-rpm` builds an RPM from this metadata.
+[package.metadata.generate-rpm]
+name = "sigilauth-desktop"
+summary = "Hardware-backed strong authentication for Linux"
+license = "AGPL-3.0-or-later"
+url = "https://sigilauth.com"
+requires = { "gtk4" = ">= 4.10", "libadwaita" = ">= 1.4", "libsecret" = "*", "tpm2-tss" = "*", "pcsc-lite" = "*" }
+
+[[package.metadata.generate-rpm.assets]]
+source = "target/release/sigil-desktop"
+dest = "/usr/bin/sigil-desktop"
+mode = "755"
+
+[[package.metadata.generate-rpm.assets]]
+source = "../../data/org.sigilauth.Desktop.desktop"
+dest = "/usr/share/applications/org.sigilauth.Desktop.desktop"
+mode = "644"
+
+[[package.metadata.generate-rpm.assets]]
+source = "../../data/org.sigilauth.Desktop.metainfo.xml"
+dest = "/usr/share/metainfo/org.sigilauth.Desktop.metainfo.xml"
+mode = "644"
+
+[[package.metadata.generate-rpm.assets]]
+source = "../../data/org.sigilauth.Desktop.gschema.xml"
+dest = "/usr/share/glib-2.0/schemas/org.sigilauth.Desktop.gschema.xml"
+mode = "644"
+
+[features]
+test-support = ["sigil-hardware/test-support"]
+
+[dependencies]
+tokio.workspace = true
+futures.workspace = true
+fluent.workspace = true
+fluent-bundle.workspace = true
+unic-langid.workspace = true
+xdg.workspace = true
+thiserror.workspace = true
+anyhow.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
+sigil-hardware.workspace = true
+sigil-secret.workspace = true
+sigil-wire.workspace = true
+sigil-i18n.workspace = true
+reqwest.workspace = true
+tokio-tungstenite = { version = "0.21", features = ["native-tls"] }
+url = "2.5"
+urlencoding = "2.1"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+base64 = "0.22"
+chrono = "0.4"
+rand = "0.8"
+
+# GTK4 + libadwaita only on Linux. Cross-compiling/CI on macOS builds the
+# binary with platform stub (see src/main.rs cfg).
+[target.'cfg(target_os = "linux")'.dependencies]
+gtk.workspace = true
+libadwaita.workspace = true
+glib.workspace = true
+gio.workspace = true
+zbus.workspace = true
+notify-rust = "4.11"
+ksni = "0.2"
+
+[dev-dependencies]
+anyhow.workspace = true

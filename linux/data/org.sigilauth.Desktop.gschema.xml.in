@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schemalist gettext-domain="@gettext_package@">
+  <enum id="@app_id@.HardwareBackend">
+    <value nick="auto"     value="0"/>
+    <value nick="tpm"      value="1"/>
+    <value nick="yubikey"  value="2"/>
+  </enum>
+
+  <schema id="@app_id@" path="/org/sigilauth/Desktop/">
+    <key name="hardware-backend" enum="@app_id@.HardwareBackend">
+      <default>'auto'</default>
+      <summary>Preferred hardware key backend</summary>
+      <description>
+        Which hardware key to use for signing. 'auto' picks TPM if available,
+        else YubiKey. 'tpm' forces TPM 2.0. 'yubikey' forces YubiKey PIV.
+      </description>
+    </key>
+
+    <key name="window-width" type="i">
+      <default>640</default>
+      <summary>Main window width in pixels</summary>
+    </key>
+
+    <key name="window-height" type="i">
+      <default>480</default>
+      <summary>Main window height in pixels</summary>
+    </key>
+
+    <key name="window-maximized" type="b">
+      <default>false</default>
+      <summary>Whether the main window is maximized</summary>
+    </key>
+
+    <key name="reduce-motion" type="b">
+      <default>false</default>
+      <summary>Override system reduced-motion preference</summary>
+      <description>
+        When true, disables transitions regardless of the system setting.
+        Defaults to false; system preference governs.
+      </description>
+    </key>
+  </schema>
+</schemalist>

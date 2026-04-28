@@ -1,0 +1,320 @@
+/**
+ * Sigil Auth Design System — GTK4 Stylesheet
+ *
+ * Color tokens, spacing, typography from Iris desktop wireframes.
+ * Matches working/mobile/wireframes/desktop/* design specifications.
+ */
+
+/* ============================================================================
+ * COLOR TOKENS
+ * ============================================================================ */
+
+@define-color sigil_bg #07070c;
+@define-color sigil_bg_raised #0e0e16;
+@define-color sigil_surface #141420;
+@define-color sigil_border #252536;
+
+@define-color sigil_text #f5f5f7;
+@define-color sigil_text_muted #9ca0b0;
+@define-color sigil_text_dim #636879;
+
+@define-color sigil_primary #4d88ff;
+@define-color sigil_accent #3dfce8;
+@define-color sigil_success #00e676;
+@define-color sigil_danger #ff5a5a;
+
+/* Apply background colors to app */
+window {
+    background-color: @sigil_bg_raised;
+}
+
+.content-view,
+scrolledwindow {
+    background-color: @sigil_bg;
+}
+
+/* Card/surface backgrounds */
+preferencesgroup,
+.card {
+    background-color: @sigil_surface;
+    border: 1px solid @sigil_border;
+    border-radius: 10px;
+}
+
+/* ============================================================================
+ * TYPOGRAPHY HIERARCHY
+ * ============================================================================ */
+
+.title-1 {
+    font-size: 24px;
+    font-weight: 600;
+    color: @sigil_text;
+}
+
+.title-2 {
+    font-size: 20px;
+    font-weight: 500;
+    color: @sigil_text;
+}
+
+.title-3 {
+    font-size: 18px;
+    font-weight: 500;
+    color: @sigil_text;
+}
+
+.body {
+    font-size: 15px;
+    color: @sigil_text;
+}
+
+.subtitle {
+    font-size: 15px;
+    color: @sigil_text_muted;
+}
+
+.caption {
+    font-size: 12px;
+    color: @sigil_text_dim;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.dim-label {
+    color: @sigil_text_dim;
+}
+
+.muted-label {
+    color: @sigil_text_muted;
+}
+
+/* Monospace for codes/fingerprints */
+.monospace {
+    font-family: monospace;
+}
+
+/* ============================================================================
+ * SPACING TOKENS
+ * ============================================================================ */
+
+.spacing-2 {
+    padding: 8px;
+}
+
+.spacing-3 {
+    padding: 12px;
+}
+
+.spacing-4 {
+    padding: 16px;
+}
+
+.spacing-6 {
+    padding: 24px;
+}
+
+.spacing-8 {
+    padding: 32px;
+}
+
+/* Margin variants */
+.margin-2 {
+    margin: 8px;
+}
+
+.margin-3 {
+    margin: 12px;
+}
+
+.margin-4 {
+    margin: 16px;
+}
+
+.margin-6 {
+    margin: 24px;
+}
+
+.margin-8 {
+    margin: 32px;
+}
+
+/* ============================================================================
+ * BUTTON STYLING
+ * ============================================================================ */
+
+button.pill {
+    border-radius: 10px;
+    padding: 12px 24px;
+}
+
+button.suggested-action {
+    background-color: @sigil_primary;
+    color: white;
+}
+
+button.suggested-action:hover {
+    background-color: shade(@sigil_primary, 1.1);
+}
+
+button.suggested-action:active {
+    background-color: shade(@sigil_primary, 0.9);
+}
+
+button.destructive-action {
+    background-color: @sigil_danger;
+    color: white;
+}
+
+button.destructive-action:hover {
+    background-color: shade(@sigil_danger, 1.1);
+}
+
+button.destructive-action:active {
+    background-color: shade(@sigil_danger, 0.9);
+}
+
+/* ============================================================================
+ * PICTOGRAM COMPONENT
+ * ============================================================================ */
+
+.emoji-large {
+    font-size: 32px;
+}
+
+.emoji-medium {
+    font-size: 24px;
+}
+
+.emoji-small {
+    font-size: 16px;
+}
+
+/* ============================================================================
+ * STATUS STATES
+ * ============================================================================ */
+
+.success {
+    color: @sigil_success;
+}
+
+.danger {
+    color: @sigil_danger;
+}
+
+.accent {
+    color: @sigil_accent;
+}
+
+/* Success/error background tints */
+.success-bg {
+    background-color: alpha(@sigil_success, 0.15);
+    border-radius: 10px;
+}
+
+.danger-bg {
+    background-color: alpha(@sigil_danger, 0.15);
+    border-radius: 10px;
+}
+
+.info-bg {
+    background-color: alpha(@sigil_primary, 0.05);
+    border-radius: 10px;
+}
+
+/* ============================================================================
+ * ENTRY/INPUT STYLING
+ * ============================================================================ */
+
+entry {
+    background-color: @sigil_surface;
+    color: @sigil_text;
+    border: 1px solid @sigil_border;
+    border-radius: 10px;
+}
+
+entry:focus {
+    border-color: @sigil_primary;
+    border-width: 2px;
+}
+
+/* ============================================================================
+ * PREFERENCES/SETTINGS ROWS
+ * ============================================================================ */
+
+row {
+    background-color: @sigil_surface;
+    color: @sigil_text;
+}
+
+row:hover {
+    background-color: shade(@sigil_surface, 1.05);
+}
+
+row:selected {
+    background-color: alpha(@sigil_primary, 0.2);
+}
+
+/* ============================================================================
+ * WINDOW DECORATIONS
+ * ============================================================================ */
+
+headerbar {
+    background-color: @sigil_surface;
+    border-bottom: 1px solid @sigil_border;
+}
+
+headerbar .title {
+    color: @sigil_text_muted;
+    font-size: 13px;
+}
+
+/* ============================================================================
+ * SCROLLBAR STYLING
+ * ============================================================================ */
+
+scrollbar {
+    background-color: transparent;
+}
+
+scrollbar slider {
+    background-color: alpha(@sigil_text_dim, 0.3);
+    border-radius: 10px;
+    min-width: 8px;
+    min-height: 8px;
+}
+
+scrollbar slider:hover {
+    background-color: alpha(@sigil_text_dim, 0.5);
+}
+
+/* ============================================================================
+ * SESSION PICTOGRAM VIEW (SIGIL-CONV-V1)
+ * Per working/ui/session-pictogram-cross-platform-review.md
+ * ============================================================================ */
+
+.pictogram-container {
+    background-color: alpha(@sigil_surface, 0.5);
+    border: 1px solid alpha(@sigil_accent, 0.2);
+    border-radius: 12px;
+    padding: 24px;
+}
+
+.pictogram-grid {
+    /* 2×3 grid with spacing defined in Rust (row-spacing: 16, column-spacing: 24) */
+}
+
+.pictogram-emoji {
+    font-size: 48pt;
+    line-height: 1;
+}
+
+/* Timer label */
+#timer-label {
+    font-size: 14px;
+    color: @sigil_text_muted;
+}
+
+#timer-label.error {
+    color: @sigil_danger;
+    font-weight: 600;
+}

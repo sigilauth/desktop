@@ -1,0 +1,168 @@
+name: Windows Desktop CI
+
+on:
+  push:
+    branches:
+      - main
+      - 'feat/**'
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-test:
+    name: Build and Test (Windows)
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore dependencies
+        run: dotnet restore Sigil.Windows.sln
+
+      - name: Build Core library
+        run: dotnet build src/Sigil.Windows.Core/Sigil.Windows.Core.csproj -c Release --no-restore
+
+      - name: Build WinUI 3 App
+        run: dotnet build src/Sigil.Windows.App/Sigil.Windows.App.csproj -c Release --no-restore
+
+      - name: Build CryptoSign CLI
+        run: dotnet build tools/Sigil.Windows.CryptoSign/Sigil.Windows.CryptoSign.csproj -c Release --no-restore
+
+      - name: Run Core Tests
+        run: dotnet test tests/Sigil.Windows.Core.Tests/Sigil.Windows.Core.Tests.csproj -c Release --no-build --logger "trx;LogFileName=test-results.trx" --logger "console;verbosity=normal"
+
+      - name: Publish Test Results
+        if: always()
+        uses: dorny/test-reporter@v1
+        with:
+          name: Windows Test Results
+          path: '**/test-results.trx'
+          reporter: dotnet-trx
+          fail-on-error: true
+
+      - name: Publish CryptoSign CLI (win-x64)
+        run: dotnet publish tools/Sigil.Windows.CryptoSign/Sigil.Windows.CryptoSign.csproj -c Release -r win-x64 --self-contained false -o ./artifacts/cryptosign-win-x64
+
+      - name: Upload CryptoSign CLI Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: cryptosign-cli-win-x64
+          path: ./artifacts/cryptosign-win-x64/Sigil.Windows.CryptoSign.exe
+          retention-days: 90
+
+      - name: Upload CryptoSign CLI Directory
+        uses: actions/upload-artifact@v4
+        with:
+          name: cryptosign-cli-win-x64-full
+          path: ./artifacts/cryptosign-win-x64/
+          retention-days: 90
+
+  wire-protocol-validation:
+    name: Wire Protocol Test Vector Validation
+    runs-on: windows-latest
+    needs: build-and-test
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Download CryptoSign CLI
+        uses: actions/download-artifact@v4
+        with:
+          name: cryptosign-cli-win-x64-full
+          path: ./cryptosign
+
+      - name: Verify CLI Runs
+        run: |
+          ./cryptosign/Sigil.Windows.CryptoSign.exe --help
+
+      - name: Test Session Pictogram Derivation
+        run: |
+          $words = ./cryptosign/Sigil.Windows.CryptoSign.exe pair-handshake --server-pub-hex 02aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa --client-pub-hex 03bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb --server-nonce-hex 0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
+          echo "Derived pictogram words: $words"
+          if (-not $words) {
+            Write-Error "Pictogram derivation failed"
+            exit 1
+          }
+
+      - name: Test Auth Domain Signing
+        run: |
+          $privKey = "c9afa9d845ba75166b5c215767b1d6934e50c3db36e89b127b8a622b120f6721"
+          $challenge = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+          $actionContext = '{"type":"test","user":"alice"}'
+
+          $signature = ./cryptosign/Sigil.Windows.CryptoSign.exe auth --priv-hex $privKey --challenge-hex $challenge --action-context-json $actionContext
+          echo "Signature (AUTH-V1): $signature"
+
+          if ($signature.Length -ne 128) {
+            Write-Error "Invalid signature length: expected 128 hex chars, got $($signature.Length)"
+            exit 1
+          }
+
+      - name: Test Domain-Separated Signing (MPA)
+        run: |
+          $privKey = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+          $message = "48656c6c6f"
+
+          $signature = ./cryptosign/Sigil.Windows.CryptoSign.exe mpa --priv-hex $privKey --message-hex $message
+          echo "Signature (MPA-V1): $signature"
+
+          if ($signature.Length -ne 128) {
+            Write-Error "Invalid signature length: expected 128 hex chars, got $($signature.Length)"
+            exit 1
+          }
+
+  cross-impl-harness:
+    name: Cross-Implementation Byte-Match Harness
+    runs-on: windows-latest
+    needs: build-and-test
+
+    steps:
+      - name: Download CryptoSign CLI
+        uses: actions/download-artifact@v4
+        with:
+          name: cryptosign-cli-win-x64-full
+          path: ./cli-artifact
+
+      - name: Clone Full Monorepo
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.repository }}
+          path: sigilauth-monorepo
+          fetch-depth: 1
+
+      - name: Place Windows CLI in Expected Location
+        run: |
+          New-Item -ItemType Directory -Force -Path sigilauth-monorepo/desktop/windows/bin
+          Copy-Item ./cli-artifact/Sigil.Windows.CryptoSign.exe sigilauth-monorepo/desktop/windows/bin/sigil-crypto-test.exe
+          Copy-Item ./cli-artifact/* sigilauth-monorepo/desktop/windows/bin/ -Recurse
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.23'
+
+      - name: Run Pair Handshake Deterministic Test
+        working-directory: sigilauth-monorepo/tests/cross-impl
+        run: |
+          go test -v -run TestPairHandshakeDeterministic
+
+      - name: Run Wire Protocol Test Suite
+        working-directory: sigilauth-monorepo/tests/cross-impl
+        run: |
+          go test -v -run "TestPairHandshakeDeterministic|TestEnvelopeRoundTrip"

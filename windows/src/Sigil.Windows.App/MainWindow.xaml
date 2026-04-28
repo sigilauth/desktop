@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Window
+    x:Class="Sigil.Windows.App.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:Sigil.Windows.App"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    Title="Sigil Auth">
+    <Grid Padding="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <TextBlock 
+            Grid.Row="0"
+            Text="Sigil Auth"
+            Style="{StaticResource TitleTextBlockStyle}"
+            Margin="0,0,0,24"/>
+
+        <!-- Status area -->
+        <StackPanel Grid.Row="1" Spacing="12">
+            <TextBlock Text="Status" Style="{StaticResource SubtitleTextBlockStyle}"/>
+            <TextBlock x:Name="StatusText" Text="Disconnected" TextWrapping="Wrap"/>
+            
+            <TextBlock Text="Fingerprint" Style="{StaticResource SubtitleTextBlockStyle}" Margin="0,12,0,0"/>
+            <TextBlock x:Name="FingerprintText" Text="—" TextWrapping="Wrap" FontFamily="Consolas"/>
+
+            <!-- TODO: Add notification list -->
+        </StackPanel>
+
+        <!-- Actions -->
+        <StackPanel Grid.Row="2" Spacing="8">
+            <Button x:Name="ConnectButton" Content="Connect" HorizontalAlignment="Stretch" Click="ConnectButton_Click"/>
+            <Button x:Name="DisconnectButton" Content="Disconnect" HorizontalAlignment="Stretch" Click="DisconnectButton_Click" IsEnabled="False"/>
+        </StackPanel>
+    </Grid>
+</Window>

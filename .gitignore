@@ -1,0 +1,6 @@
+macos/.build/
+macos/build/
+windows/**/bin/
+windows/**/obj/
+linux/target/
+.DS_Store

@@ -1,0 +1,162 @@
+name: Linux desktop release
+
+on:
+  push:
+    tags:
+      - 'linux-v*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag (linux-vX.Y.Z)'
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  build-deb:
+    runs-on: ubuntu-22.04
+    defaults:
+      run:
+        working-directory: linux
+    outputs:
+      deb_path: ${{ steps.deb.outputs.deb_path }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libgtk-4-dev libadwaita-1-dev libsecret-1-dev \
+            libtss2-dev libpcsclite-dev dpkg-dev
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: linux
+
+      - name: Install cargo-deb
+        run: cargo install cargo-deb --locked
+
+      - name: Build Debian package
+        id: deb
+        run: |
+          cargo deb -p sigil-desktop --no-build  # we rebuild explicitly below
+          cargo build --release -p sigil-desktop
+          cargo deb -p sigil-desktop
+          DEB=$(ls target/debian/*.deb | head -n1)
+          echo "deb_path=$DEB" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: deb-unsigned
+          path: linux/target/debian/*.deb
+          retention-days: 1
+
+  build-rpm:
+    runs-on: ubuntu-latest
+    container:
+      image: fedora:40
+    defaults:
+      run:
+        working-directory: linux
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install dependencies
+        run: |
+          dnf install -y \
+            gtk4-devel libadwaita-devel libsecret-devel \
+            tpm2-tss-devel pcsc-lite-devel \
+            rust cargo gcc pkgconf-pkg-config rpm-build
+
+      - name: Install cargo-generate-rpm
+        run: cargo install cargo-generate-rpm --locked
+
+      - run: cargo build --release -p sigil-desktop
+      - run: cargo generate-rpm -p crates/sigil-desktop
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: rpm-unsigned
+          path: linux/target/generate-rpm/*.rpm
+          retention-days: 1
+
+  sign-and-publish:
+    runs-on: ubuntu-22.04
+    needs: [build-deb, build-rpm]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: deb-unsigned
+          path: ./artifacts/deb/
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: rpm-unsigned
+          path: ./artifacts/rpm/
+
+      - name: Import GPG signing key
+        env:
+          GPG_PRIVATE_KEY: ${{ secrets.SIGILAUTH_GPG_PRIVATE_KEY }}
+          GPG_PASSPHRASE: ${{ secrets.SIGILAUTH_GPG_PASSPHRASE }}
+        run: |
+          if [ -z "$GPG_PRIVATE_KEY" ]; then
+            echo "::error::SIGILAUTH_GPG_PRIVATE_KEY secret not set"
+            exit 1
+          fi
+          echo "$GPG_PRIVATE_KEY" | gpg --batch --import
+          KEY_ID=$(gpg --list-secret-keys --with-colons | awk -F: '/^sec:/ {print $5; exit}')
+          echo "SIGNING_KEY=$KEY_ID" >> "$GITHUB_ENV"
+
+      - name: Sign .deb with detached GPG signature
+        env:
+          GPG_PASSPHRASE: ${{ secrets.SIGILAUTH_GPG_PASSPHRASE }}
+        run: |
+          for deb in artifacts/deb/*.deb; do
+            gpg --batch --pinentry-mode loopback \
+              --passphrase "$GPG_PASSPHRASE" \
+              --detach-sign --armor \
+              --local-user "$SIGNING_KEY" \
+              "$deb"
+          done
+
+      - name: Sign .rpm with detached GPG signature
+        env:
+          GPG_PASSPHRASE: ${{ secrets.SIGILAUTH_GPG_PASSPHRASE }}
+        run: |
+          for rpm in artifacts/rpm/*.rpm; do
+            gpg --batch --pinentry-mode loopback \
+              --passphrase "$GPG_PASSPHRASE" \
+              --detach-sign --armor \
+              --local-user "$SIGNING_KEY" \
+              "$rpm"
+          done
+
+      - name: Verify signatures
+        run: |
+          for deb in artifacts/deb/*.deb; do
+            gpg --verify "$deb.asc" "$deb"
+          done
+          for rpm in artifacts/rpm/*.rpm; do
+            gpg --verify "$rpm.asc" "$rpm"
+          done
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="${{ github.ref_name }}"
+          if [ -z "$TAG" ] || [ "$TAG" = "main" ]; then
+            TAG="${{ github.event.inputs.tag }}"
+          fi
+          gh release create "$TAG" \
+            --title "Sigil Desktop Linux $TAG" \
+            --generate-notes \
+            artifacts/deb/*.deb \
+            artifacts/deb/*.asc \
+            artifacts/rpm/*.rpm \
+            artifacts/rpm/*.asc

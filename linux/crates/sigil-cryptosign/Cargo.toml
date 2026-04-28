@@ -1,0 +1,23 @@
+[package]
+name = "sigil-cryptosign"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+description = "CryptoSign CLI for SIGIL-CONV-V1 test harness"
+
+[[bin]]
+name = "sigil-cryptosign"
+path = "src/main.rs"
+
+[dependencies]
+sigil-wire.workspace = true
+p256.workspace = true
+sha2.workspace = true
+anyhow.workspace = true
+clap = { version = "4", features = ["derive"] }
+hex = "0.4"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+serde_jcs = "0.1"
+base64 = "0.22"

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
+  <!-- Symbolic icon (monochrome) for toolbars/panels -->
+  <!-- TODO: Replace with professional design -->
+
+  <path d="M 8,2 L 3,4 L 3,8 C 3,11 5,13 8,14 C 11,13 13,11 13,8 L 13,4 Z M 8,7 C 7.5,7 7,6.5 7,6 C 7,5.5 7.5,5 8,5 C 8.5,5 9,5.5 9,6 C 9,6.5 8.5,7 8,7 Z M 7,8 L 9,8 L 9,12 L 7,12 Z"
+        fill="#2e3436" style="fill:#bebebe"/>
+</svg>

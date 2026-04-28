@@ -1,0 +1,295 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="Sigil.Windows.App.Views.PairFlowView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:viewmodels="using:Sigil.Windows.App.ViewModels"
+    mc:Ignorable="d"
+    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+
+    <ScrollViewer>
+        <StackPanel
+            Padding="48"
+            Spacing="24"
+            MaxWidth="600"
+            HorizontalAlignment="Center">
+
+            <!-- URL Input Section -->
+            <StackPanel
+                Visibility="{x:Bind ViewModel.ShowUrlInput, Mode=OneWay}"
+                Spacing="20">
+
+                <TextBlock
+                    Text="Pair with Server"
+                    Style="{StaticResource TitleTextBlockStyle}"
+                    HorizontalAlignment="Center" />
+
+                <TextBlock
+                    Text="Enter the server URL to begin pairing:"
+                    Style="{StaticResource BodyTextBlockStyle}"
+                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                    HorizontalAlignment="Center" />
+
+                <TextBox
+                    Text="{x:Bind ViewModel.ServerUrl, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                    PlaceholderText="https://auth.example.com"
+                    Header="Server URL"
+                    IsEnabled="{x:Bind ViewModel.IsInitiating, Mode=OneWay, Converter={StaticResource BoolNegationConverter}}"
+                    AutomationProperties.Name="Server URL input" />
+
+                <Button
+                    Content="Begin Pairing"
+                    Command="{x:Bind ViewModel.InitiatePairCommand}"
+                    Style="{StaticResource AccentButtonStyle}"
+                    HorizontalAlignment="Center"
+                    MinWidth="180"
+                    AutomationProperties.Name="Begin pairing with server">
+                    <Button.Content>
+                        <StackPanel
+                            Orientation="Horizontal"
+                            Spacing="8"
+                            Visibility="{x:Bind ViewModel.IsInitiating, Mode=OneWay}">
+                            <ProgressRing
+                                IsActive="True"
+                                Width="16"
+                                Height="16" />
+                            <TextBlock Text="Connecting..." />
+                        </StackPanel>
+                    </Button.Content>
+                    <Button.Resources>
+                        <views:BoolNegationConverter x:Key="BoolNegationConverter"
+                                                     xmlns:views="using:Sigil.Windows.App.Views" />
+                    </Button.Resources>
+                </Button>
+
+                <InfoBar
+                    IsOpen="{x:Bind ViewModel.ErrorMessage, Mode=OneWay, Converter={StaticResource StringNotEmptyConverter}}"
+                    Severity="Error"
+                    Title="Error"
+                    Message="{x:Bind ViewModel.ErrorMessage, Mode=OneWay}" />
+            </StackPanel>
+
+            <!-- Pictogram Confirmation Section -->
+            <StackPanel
+                Visibility="{x:Bind ViewModel.ShowPictogram, Mode=OneWay}"
+                Spacing="24">
+
+                <!-- Header -->
+                <TextBlock
+                    Text="Confirm Server Identity"
+                    Style="{StaticResource TitleTextBlockStyle}"
+                    HorizontalAlignment="Center" />
+
+            <TextBlock
+                Text="{x:Bind ViewModel.ServerId, Mode=OneWay}"
+                Style="{StaticResource SubtitleTextBlockStyle}"
+                HorizontalAlignment="Center"
+                Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+
+            <!-- Instructions -->
+            <TextBlock
+                Text="Verify this pictogram matches what the server displays:"
+                Style="{StaticResource BodyTextBlockStyle}"
+                HorizontalAlignment="Center"
+                TextWrapping="Wrap"
+                Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+
+            <!-- Session Pictogram Grid (6 emoji+word pairs) -->
+            <Grid
+                Background="{ThemeResource LayerFillColorDefaultBrush}"
+                BorderBrush="{ThemeResource AccentFillColorDefaultBrush}"
+                BorderThickness="1"
+                CornerRadius="12"
+                Padding="32,24"
+                FlowDirection="LeftToRight"
+                Opacity="1"
+                AutomationProperties.Name="Session pictogram verification"
+                AutomationProperties.HelpText="Verify the six emoji-word pairs match what the server displays">
+                <Grid.Resources>
+                    <SolidColorBrush x:Key="AccentFillColorDefaultBrush" Color="{ThemeResource SystemAccentColor}" Opacity="0.2"/>
+                </Grid.Resources>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <!-- Pictogram 0 -->
+                <StackPanel Grid.Row="0" Grid.Column="0" Spacing="8" HorizontalAlignment="Center" Margin="0,0,0,20"
+                            AutomationProperties.Name="{x:Bind ViewModel.SessionPictogram[0].Name, Mode=OneWay}">
+                    <TextBlock
+                        Text="{x:Bind ViewModel.SessionPictogram[0].Emoji, Mode=OneWay}"
+                        FontSize="48"
+                        HorizontalAlignment="Center"
+                        AutomationProperties.AccessibilityView="Raw" />
+                    <TextBlock
+                        Text="{x:Bind ViewModel.SessionPictogram[0].Name, Mode=OneWay}"
+                        Style="{StaticResource BodyTextBlockStyle}"
+                        HorizontalAlignment="Center"
+                        AutomationProperties.AccessibilityView="Raw" />
+                </StackPanel>
+
+                <!-- Pictogram 1 -->
+                <StackPanel Grid.Row="0" Grid.Column="1" Spacing="8" HorizontalAlignment="Center" Margin="0,0,0,20"
+                            AutomationProperties.Name="{x:Bind ViewModel.SessionPictogram[1].Name, Mode=OneWay}">
+                    <TextBlock
+                        Text="{x:Bind ViewModel.SessionPictogram[1].Emoji, Mode=OneWay}"
+                        FontSize="48"
+                        HorizontalAlignment="Center"
+                        AutomationProperties.AccessibilityView="Raw" />
+                    <TextBlock
+                        Text="{x:Bind ViewModel.SessionPictogram[1].Name, Mode=OneWay}"
+                        Style="{StaticResource BodyTextBlockStyle}"
+                        HorizontalAlignment="Center"
+                        AutomationProperties.AccessibilityView="Raw" />
+                </StackPanel>
+
+                <!-- Pictogram 2 -->
+                <StackPanel Grid.Row="0" Grid.Column="2" Spacing="8" HorizontalAlignment="Center" Margin="0,0,0,20"
+                            AutomationProperties.Name="{x:Bind ViewModel.SessionPictogram[2].Name, Mode=OneWay}">
+                    <TextBlock
+                        Text="{x:Bind ViewModel.SessionPictogram[2].Emoji, Mode=OneWay}"
+                        FontSize="48"
+                        HorizontalAlignment="Center"
+                        AutomationProperties.AccessibilityView="Raw" />
+                    <TextBlock
+                        Text="{x:Bind ViewModel.SessionPictogram[2].Name, Mode=OneWay}"
+                        Style="{StaticResource BodyTextBlockStyle}"
+                        HorizontalAlignment="Center"
+                        AutomationProperties.AccessibilityView="Raw" />
+                </StackPanel>
+
+                <!-- Pictogram 3 -->
+                <StackPanel Grid.Row="1" Grid.Column="0" Spacing="8" HorizontalAlignment="Center"
+                            AutomationProperties.Name="{x:Bind ViewModel.SessionPictogram[3].Name, Mode=OneWay}">
+                    <TextBlock
+                        Text="{x:Bind ViewModel.SessionPictogram[3].Emoji, Mode=OneWay}"
+                        FontSize="48"
+                        HorizontalAlignment="Center"
+                        AutomationProperties.AccessibilityView="Raw" />
+                    <TextBlock
+                        Text="{x:Bind ViewModel.SessionPictogram[3].Name, Mode=OneWay}"
+                        Style="{StaticResource BodyTextBlockStyle}"
+                        HorizontalAlignment="Center"
+                        AutomationProperties.AccessibilityView="Raw" />
+                </StackPanel>
+
+                <!-- Pictogram 4 -->
+                <StackPanel Grid.Row="1" Grid.Column="1" Spacing="8" HorizontalAlignment="Center"
+                            AutomationProperties.Name="{x:Bind ViewModel.SessionPictogram[4].Name, Mode=OneWay}">
+                    <TextBlock
+                        Text="{x:Bind ViewModel.SessionPictogram[4].Emoji, Mode=OneWay}"
+                        FontSize="48"
+                        HorizontalAlignment="Center"
+                        AutomationProperties.AccessibilityView="Raw" />
+                    <TextBlock
+                        Text="{x:Bind ViewModel.SessionPictogram[4].Name, Mode=OneWay}"
+                        Style="{StaticResource BodyTextBlockStyle}"
+                        HorizontalAlignment="Center"
+                        AutomationProperties.AccessibilityView="Raw" />
+                </StackPanel>
+
+                <!-- Pictogram 5 -->
+                <StackPanel Grid.Row="1" Grid.Column="2" Spacing="8" HorizontalAlignment="Center"
+                            AutomationProperties.Name="{x:Bind ViewModel.SessionPictogram[5].Name, Mode=OneWay}">
+                    <TextBlock
+                        Text="{x:Bind ViewModel.SessionPictogram[5].Emoji, Mode=OneWay}"
+                        FontSize="48"
+                        HorizontalAlignment="Center"
+                        AutomationProperties.AccessibilityView="Raw" />
+                    <TextBlock
+                        Text="{x:Bind ViewModel.SessionPictogram[5].Name, Mode=OneWay}"
+                        Style="{StaticResource BodyTextBlockStyle}"
+                        HorizontalAlignment="Center"
+                        AutomationProperties.AccessibilityView="Raw" />
+                </StackPanel>
+            </Grid>
+
+            <!-- Speakable (for screen readers and copy-paste) -->
+            <Border
+                Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}"
+                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                BorderThickness="1"
+                CornerRadius="8"
+                Padding="16">
+                <StackPanel Spacing="8">
+                    <TextBlock
+                        Text="Speakable:"
+                        Style="{StaticResource CaptionTextBlockStyle}"
+                        Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                    <TextBlock
+                        Text="{x:Bind ViewModel.SessionPictogramSpeakable, Mode=OneWay}"
+                        Style="{StaticResource BodyStrongTextBlockStyle}"
+                        IsTextSelectionEnabled="True"
+                        AutomationProperties.Name="{x:Bind ViewModel.SessionPictogramSpeakable, Mode=OneWay}" />
+                </StackPanel>
+            </Border>
+
+            <!-- Countdown Timer -->
+            <StackPanel
+                Orientation="Horizontal"
+                HorizontalAlignment="Center"
+                Spacing="8">
+                <FontIcon
+                    Glyph="&#xE823;"
+                    FontSize="16"
+                    Foreground="{ThemeResource SystemFillColorCriticalBrush}"
+                    Visibility="{x:Bind ViewModel.IsExpired, Mode=OneWay}" />
+                <TextBlock
+                    Text="{x:Bind ViewModel.TimerText, Mode=OneWay}"
+                    Style="{StaticResource CaptionTextBlockStyle}"
+                    FontWeight="Bold"
+                    Foreground="{x:Bind ViewModel.TimerForeground, Mode=OneWay}" />
+            </StackPanel>
+
+            <!-- Action Buttons -->
+            <StackPanel
+                Orientation="Horizontal"
+                HorizontalAlignment="Center"
+                Spacing="12"
+                Margin="0,12,0,0">
+                <Button
+                    Content="Deny"
+                    Command="{x:Bind ViewModel.CancelPairCommand}"
+                    MinWidth="140"
+                    AutomationProperties.Name="Deny this pairing request" />
+                <Button
+                    Content="Approve"
+                    Command="{x:Bind ViewModel.ConfirmPairCommand}"
+                    Style="{StaticResource AccentButtonStyle}"
+                    MinWidth="140"
+                    AutomationProperties.Name="Approve pairing with this pictogram" />
+            </StackPanel>
+
+            <!-- Status Messages -->
+            <InfoBar
+                IsOpen="{x:Bind ViewModel.IsExpired, Mode=OneWay}"
+                Severity="Error"
+                Title="Handshake Expired"
+                Message="The pair handshake has expired. Please retry." />
+
+            <InfoBar
+                IsOpen="{x:Bind ViewModel.IsComplete, Mode=OneWay}"
+                Severity="Success"
+                Title="Pairing Complete"
+                Message="Device successfully paired with server." />
+
+            </StackPanel>
+            <!-- End Pictogram Confirmation Section -->
+
+        </StackPanel>
+    </ScrollViewer>
+
+    <Page.Resources>
+        <views:BoolNegationConverter x:Key="BoolNegationConverter"
+                                     xmlns:views="using:Sigil.Windows.App.Views" />
+        <views:StringNotEmptyConverter x:Key="StringNotEmptyConverter"
+                                       xmlns:views="using:Sigil.Windows.App.Views" />
+    </Page.Resources>
+</Page>

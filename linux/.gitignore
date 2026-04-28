@@ -1,0 +1,9 @@
+/target/
+/build/
+/_build/
+/cargo-home/
+Cargo.lock
+*.swp
+*.swo
+.DS_Store
+*.pot

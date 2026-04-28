@@ -1,0 +1,20 @@
+#!/bin/sh
+# postinst — run after Debian package unpack.
+set -e
+
+# Compile the GSettings schema we just installed.
+if [ -d /usr/share/glib-2.0/schemas ] && command -v glib-compile-schemas >/dev/null; then
+    glib-compile-schemas /usr/share/glib-2.0/schemas
+fi
+
+# Refresh the desktop DB so the launcher picks up our .desktop file.
+if command -v update-desktop-database >/dev/null; then
+    update-desktop-database -q /usr/share/applications || true
+fi
+
+# Validate AppStream metadata (non-fatal).
+if command -v appstreamcli >/dev/null; then
+    appstreamcli refresh-cache --force || true
+fi
+
+exit 0

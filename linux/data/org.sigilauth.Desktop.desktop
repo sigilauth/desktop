@@ -1,0 +1,16 @@
+[Desktop Entry]
+Type=Application
+Version=1.5
+Name=Sigil Auth
+GenericName=Authentication
+Comment=Hardware-backed strong authentication with multi-party approval
+Exec=sigil-desktop %U
+Icon=org.sigilauth.Desktop
+Terminal=false
+StartupNotify=true
+Categories=Utility;Security;GTK;
+Keywords=authentication;security;tpm;yubikey;mfa;2fa;mpa;
+StartupWMClass=org.sigilauth.Desktop
+MimeType=x-scheme-handler/sigilauth;
+
+X-GNOME-UsesNotifications=true

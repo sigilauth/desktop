@@ -1,0 +1,78 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/sigil-wire",
+    "crates/sigil-hardware",
+    "crates/sigil-secret",
+    "crates/sigil-i18n",
+    "crates/sigil-desktop",
+    "crates/sigil-cryptosign",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.75"
+license = "AGPL-3.0-or-later"
+repository = "https://github.com/sigilauth/desktop"
+authors = ["Sigil Auth contributors"]
+
+[workspace.dependencies]
+# GUI. Crate name is `gtk` so downstream code can `use gtk::...` matching
+# upstream convention; the physical crate is `gtk4` v0.8.
+gtk = { version = "0.8", package = "gtk4", features = ["v4_10"] }
+libadwaita = { version = "0.6", features = ["v1_4"] }
+glib = "0.19"
+gio = "0.19"
+
+# Async
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "sync", "time"] }
+futures = "0.3"
+
+# D-Bus + Secret Service
+zbus = { version = "4", default-features = false, features = ["tokio"] }
+secret-service = { version = "4", default-features = false, features = ["rt-tokio-crypto-rust"] }
+
+# Hardware keys — feature-gated in sigil-hardware
+tss-esapi = { version = "7" }
+yubikey = { version = "0.8" }
+
+# Crypto primitives
+p256 = { version = "0.13", default-features = false, features = ["ecdsa", "ecdh", "arithmetic", "std"] }
+sha2 = "0.10"
+rand_core = "0.6"
+aes-gcm = "0.10"
+hkdf = "0.12"
+argon2 = { version = "0.5", features = ["std"] }
+serde_jcs = "0.1"
+
+# i18n
+fluent = "0.16"
+fluent-bundle = "0.15"
+unic-langid = "0.9"
+
+# Errors + tracing
+thiserror = "1"
+anyhow = "1"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+# XDG
+xdg = "2"
+
+# HTTP + WebSocket
+reqwest = { version = "0.12", default-features = false, features = ["rustls-tls", "json"] }
+tokio-tungstenite = { version = "0.21", features = ["rustls-tls-webpki-roots"] }
+url = "2"
+
+# Workspace-internal
+sigil-wire = { path = "crates/sigil-wire" }
+sigil-hardware = { path = "crates/sigil-hardware" }
+sigil-secret = { path = "crates/sigil-secret" }
+sigil-i18n = { path = "crates/sigil-i18n" }
+
+[profile.release]
+opt-level = 3
+lto = "thin"
+codegen-units = 1
+strip = "symbols"

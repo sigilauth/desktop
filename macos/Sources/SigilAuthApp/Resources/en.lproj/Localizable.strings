@@ -1,0 +1,80 @@
+/* Pair Flow — English (en) */
+/* Session pictogram verification flow for SIGIL-CONV-V1 protocol */
+
+/* Main title for pictogram verification screen */
+"pair-flow-title" = "Verify Server Identity";
+
+/* Instructions shown above the pictogram grid */
+"pair-flow-subtitle" = "Compare this pictogram with the one displayed by the service. Both must match exactly for secure pairing.";
+
+/* Label for the text representation of pictogram */
+"pair-flow-speakable-label" = "Speakable";
+
+/* Primary action button to approve pictogram match */
+"pair-flow-confirm-button" = "Approve";
+
+/* Secondary action button to reject/deny the pairing */
+"pair-flow-deny-button" = "Deny";
+
+/* Alternative cancel button */
+"pair-flow-cancel-button" = "Cancel";
+
+/* Accessibility label for approve button */
+"pair-flow-confirm-a11y" = "Approve pairing with this pictogram";
+
+/* Accessibility label for deny button */
+"pair-flow-deny-a11y" = "Deny pairing request";
+
+/* Accessibility label for cancel button */
+"pair-flow-cancel-a11y" = "Cancel pairing flow";
+
+/* VoiceOver announcement when pictogram is fully loaded */
+"pair-flow-voiceover-loaded" = "Pictogram verification ready. Six symbols displayed. Swipe to navigate.";
+
+/* Countdown - one second */
+"pair-flow-countdown-seconds-one" = "Expires in %d second";
+
+/* Countdown - multiple seconds */
+"pair-flow-countdown-seconds-other" = "Expires in %d seconds";
+
+/* Countdown - one minute */
+"pair-flow-countdown-minutes-one" = "Expires in %d minute";
+
+/* Countdown - multiple minutes */
+"pair-flow-countdown-minutes-other" = "Expires in %d minutes";
+
+/* VoiceOver announcement for pictogram position */
+"pair-flow-voiceover-pictogram" = "Position %d: %@ %@";
+
+/* Idle state — initial screen */
+"pair-flow-idle-title" = "Pair with Server";
+"pair-flow-idle-subtitle" = "Enter the server URL to begin pairing.";
+"pair-flow-url-placeholder" = "https://example.com";
+"pair-flow-start-button" = "Start Pairing";
+
+/* Loading states */
+"pair-flow-fetching" = "Connecting to server…";
+"pair-flow-deriving" = "Generating pictogram…";
+"pair-flow-submitting" = "Submitting pairing request…";
+"pair-flow-persisting" = "Saving trust…";
+
+/* Success state */
+"pair-flow-success-title" = "Pairing Complete";
+"pair-flow-success-subtitle" = "This device is now paired with the server.";
+"pair-flow-done-button" = "Done";
+
+/* Waiting for admin approval */
+"pair-flow-waiting-title" = "Waiting for Approval";
+"pair-flow-waiting-subtitle" = "Administrator has not yet approved this pairing request. Please wait or contact your administrator.";
+
+/* Error state */
+"pair-flow-error-title" = "Pairing Failed";
+"pair-flow-retry-button" = "Try Again";
+
+/* Denied state */
+"pair-flow-denied-title" = "Pairing Denied";
+"pair-flow-denied-subtitle" = "You denied the pairing request.";
+
+/* Timeout state */
+"pair-flow-timeout-title" = "Session Expired";
+"pair-flow-timeout-subtitle" = "The pairing session timed out. Please try again.";

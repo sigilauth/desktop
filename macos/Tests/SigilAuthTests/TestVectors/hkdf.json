@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "HKDF Test Vectors",
+  "description": "Test vectors for HKDF-SHA256 key derivation per protocol-spec §1.1",
+  "algorithm": "HKDF-SHA256",
+  "vectors": [
+    {
+      "name": "Secure decrypt key derivation",
+      "info_string": "sigil-decrypt-v1",
+      "ikm_hex": "0102030405060708091011121314151617181920212223242526272829303132",
+      "salt_hex": "4167387831633237656464343533626365633566313263366239333038386634",
+      "output_length": 32,
+      "expected_okm_hex": "a3b1c4d5e6f7081920314253647586970a1b2c3d4e5f6071829304a5b6c7d8e9"
+    },
+    {
+      "name": "Mnemonic encryption key derivation",
+      "info_string": "sigil-mnemonic-v1",
+      "ikm_hex": "deadbeefcafebabe0102030405060708091011121314151617181920212223",
+      "salt_hex": "73746b5f6162633132333435363738393061626364656667",
+      "output_length": 32,
+      "expected_okm_hex": "f1e2d3c4b5a69788796a5b4c3d2e1f001122334455667788990aabbccddeeff0"
+    },
+    {
+      "name": "Transport encryption key derivation",
+      "info_string": "sigil-transport-v1",
+      "ikm_hex": "aabbccddeeff00112233445566778899aabbccddeeff00112233445566778899",
+      "salt_hex": "72657175657374313233343536373839",
+      "output_length": 32,
+      "expected_okm_hex": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+    }
+  ],
+  "note": "These are placeholder values. Implementations MUST compute actual HKDF outputs and update expected values accordingly."
+}

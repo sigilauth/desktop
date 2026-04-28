@@ -1,0 +1,17 @@
+[package]
+name = "sigil-i18n"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+description = "Fluent-rs i18n runtime for Sigil Auth, consuming the B15 shared catalog"
+
+[dependencies]
+fluent.workspace = true
+fluent-bundle.workspace = true
+unic-langid.workspace = true
+thiserror.workspace = true
+tracing.workspace = true
+
+[dev-dependencies]
+anyhow.workspace = true

@@ -1,0 +1,67 @@
+name: Windows Desktop Build
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'windows/**'
+      - '.github/workflows/windows-desktop-build.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'windows/**'
+      - '.github/workflows/windows-desktop-build.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build WinUI 3 App + MSIX
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore NuGet packages
+        run: dotnet restore windows/src/Sigil.Windows.App/Sigil.Windows.App.csproj
+
+      - name: Build Core library
+        run: dotnet build windows/src/Sigil.Windows.Core/Sigil.Windows.Core.csproj -c Release --no-restore
+
+      - name: Build WinUI 3 app
+        run: dotnet build windows/src/Sigil.Windows.App/Sigil.Windows.App.csproj -c Release -p:Platform=x64 --no-restore
+
+      - name: Run unit tests
+        run: dotnet test windows/tests/Sigil.Windows.Core.Tests/Sigil.Windows.Core.Tests.csproj -c Release --filter "FullyQualifiedName~UnitTests"
+
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v2
+
+      - name: Build MSIX package
+        continue-on-error: true
+        run: msbuild windows/src/Sigil.Windows.Package/Sigil.Windows.Package.wapproj /p:Configuration=Release /p:Platform=x64 /p:UapAppxPackageBuildMode=SideloadOnly /p:AppxBundle=Never
+
+      - name: Upload MSIX artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sigil-windows-msix
+          path: windows/src/Sigil.Windows.Package/AppPackages/**/*.msix
+          retention-days: 30
+          if-no-files-found: warn
+
+      - name: Upload build logs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-logs
+          path: |
+            windows/src/**/*.binlog
+            windows/src/**/obj/**/*.log
+          retention-days: 7

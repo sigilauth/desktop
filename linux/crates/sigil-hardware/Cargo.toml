@@ -1,0 +1,36 @@
+[package]
+name = "sigil-hardware"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+description = "Hardware-backed signing key abstraction for Sigil Auth (TPM 2.0 + YubiKey PIV)"
+
+[features]
+default = ["tpm", "yubikey"]
+tpm = ["dep:tss-esapi"]
+yubikey = ["dep:yubikey"]
+# Exposes `SoftwareTestKey` for unit/integration tests. NEVER enable in release.
+test-support = ["dep:rand"]
+# Run real-TPM integration tests against swtpm (Linux CI only).
+tpm-hardware-tests = ["tpm"]
+
+[dependencies]
+p256.workspace = true
+sha2.workspace = true
+rand_core.workspace = true
+thiserror.workspace = true
+tracing.workspace = true
+sigil-wire.workspace = true
+rand = { version = "0.8", optional = true }
+
+# Native deps: Linux only. macOS/Windows builds with `--features tpm` succeed
+# but the module's call-sites are cfg'd to target_os = "linux" so the feature
+# compiles to a stub platform error.
+[target.'cfg(target_os = "linux")'.dependencies]
+tss-esapi = { workspace = true, optional = true }
+yubikey = { workspace = true, optional = true }
+
+[dev-dependencies]
+anyhow.workspace = true
+rand = "0.8"

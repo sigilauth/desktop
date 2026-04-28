@@ -1,0 +1,75 @@
+# CodeQL Security Analysis for Swift
+# Copy to: .github/workflows/codeql.yml in sigilauth/app (iOS)
+
+name: CodeQL
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'ios/**'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'ios/**'
+  schedule:
+    - cron: '0 6 * * 1'
+
+permissions:
+  security-events: write
+  contents: read
+
+jobs:
+  analyze:
+    name: Analyze Swift
+    runs-on: macos-14
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode_15.2.app
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: swift
+          queries: +security-extended
+
+      - name: Build iOS
+        run: |
+          cd ios
+          xcodebuild -scheme SigilAuth \
+            -destination 'platform=iOS Simulator,OS=latest,name=iPhone 15' \
+            -configuration Debug \
+            build
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:swift"
+
+      # Sigil-specific: Check Secure Enclave usage
+      - name: Check Secure Enclave patterns
+        run: |
+          echo "Checking iOS security patterns..."
+          
+          # Ensure Secure Enclave is used
+          if ! grep -r "kSecAttrTokenIDSecureEnclave" ios/; then
+            echo "::error::Secure Enclave token not found. Keys must use Secure Enclave."
+            exit 1
+          fi
+          
+          # Check biometric access control
+          if ! grep -r "kSecAccessControlBiometry" ios/; then
+            echo "::error::Biometric access control not found."
+            exit 1
+          fi
+          
+          # No NSLog of sensitive data
+          if grep -rE "NSLog.*@\".*key|secret|mnemonic|signature" ios/; then
+            echo "::warning::Potential sensitive data in NSLog."
+          fi
+          
+          echo "iOS security pattern check passed."

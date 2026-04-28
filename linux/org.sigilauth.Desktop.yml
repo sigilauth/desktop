@@ -1,0 +1,53 @@
+app-id: org.sigilauth.Desktop
+runtime: org.gnome.Platform
+runtime-version: '47'
+sdk: org.gnome.Sdk
+sdk-extensions:
+  - org.freedesktop.Sdk.Extension.rust-stable
+command: sigil-desktop
+
+finish-args:
+  # X11 + fallback to Wayland
+  - --socket=fallback-x11
+  - --socket=wayland
+  # D-Bus access for Secret Service (libsecret)
+  - --socket=session-bus
+  - --system-talk-name=org.freedesktop.secrets
+  # Hardware device access for TPM2 and YubiKey
+  - --device=all
+  # Network access for relay WebSocket connection
+  - --share=network
+  # Notifications
+  - --talk-name=org.freedesktop.Notifications
+
+modules:
+  - name: sigil-desktop
+    buildsystem: simple
+    build-options:
+      append-path: /usr/lib/sdk/rust-stable/bin
+      env:
+        CARGO_HOME: /run/build/sigil-desktop/cargo
+        RUST_BACKTRACE: '1'
+    build-commands:
+      # Build with Cargo
+      - cargo --offline fetch --manifest-path Cargo.toml --verbose
+      - cargo --offline build --release --verbose
+      # Install binary
+      - install -Dm755 target/release/sigil-desktop -t /app/bin
+      # Install desktop file
+      - install -Dm644 data/org.sigilauth.Desktop.desktop -t /app/share/applications
+      # Install metainfo
+      - install -Dm644 data/org.sigilauth.Desktop.metainfo.xml -t /app/share/metainfo
+      # Install GSettings schema
+      - install -Dm644 data/org.sigilauth.Desktop.gschema.xml -t /app/share/glib-2.0/schemas
+      # Compile schemas
+      - glib-compile-schemas /app/share/glib-2.0/schemas
+      # Install icons
+      - install -Dm644 data/icons/hicolor/scalable/apps/org.sigilauth.Desktop.svg -t /app/share/icons/hicolor/scalable/apps
+      - install -Dm644 data/icons/hicolor/symbolic/apps/org.sigilauth.Desktop-symbolic.svg -t /app/share/icons/hicolor/symbolic/apps
+    sources:
+      - type: dir
+        path: .
+      # Cargo dependencies (generated with flatpak-cargo-generator.py)
+      # Run: flatpak-cargo-generator.py Cargo.lock -o cargo-sources.json
+      - cargo-sources.json

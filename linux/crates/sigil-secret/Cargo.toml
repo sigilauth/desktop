@@ -1,0 +1,27 @@
+[package]
+name = "sigil-secret"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+description = "libsecret / Secret Service wrapper for Sigil Auth metadata (NOT private keys)"
+
+[features]
+# Run real-daemon integration tests against gnome-keyring via dbus-run-session.
+# CI only; never default.
+integration-tests = []
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+thiserror.workspace = true
+tracing.workspace = true
+tokio.workspace = true
+
+# Linux-only: secret-service crate speaks D-Bus to org.freedesktop.secrets.
+[target.'cfg(target_os = "linux")'.dependencies]
+secret-service.workspace = true
+
+[dev-dependencies]
+anyhow.workspace = true
+tokio = { workspace = true, features = ["rt-multi-thread", "macros"] }

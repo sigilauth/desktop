@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>org.sigilauth.Desktop</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>AGPL-3.0-or-later</project_license>
+
+  <name>Sigil Auth</name>
+  <summary>Hardware-backed strong authentication</summary>
+
+  <description>
+    <p>
+      Sigil Auth is an open-source authentication system using hardware-bound
+      cryptographic keys — no shared secrets, no passwords, no TOTP seeds.
+    </p>
+    <p>
+      On Linux, Sigil Auth stores signing keys in a TPM 2.0 chip or a YubiKey
+      with the PIV applet. Every authentication requires user presence: a PIN
+      for TPM, or a PIN plus physical touch for YubiKey. Private keys never
+      leave hardware.
+    </p>
+    <p>Features:</p>
+    <ul>
+      <li>Push-based login approval with full action context shown before signing</li>
+      <li>Multi-party approval for sensitive operations (M-of-N device quorum)</li>
+      <li>Multiple server configurations in a single app</li>
+      <li>Full screen-reader support via AT-SPI (Orca)</li>
+      <li>Dark mode, reduced motion, and high-contrast awareness</li>
+    </ul>
+  </description>
+
+  <launchable type="desktop-id">org.sigilauth.Desktop.desktop</launchable>
+
+  <url type="homepage">https://sigilauth.com</url>
+  <url type="bugtracker">https://github.com/sigilauth/desktop/issues</url>
+  <url type="help">https://sigilauth.com/docs</url>
+  <url type="vcs-browser">https://github.com/sigilauth/desktop</url>
+
+  <developer id="com.sigilauth">
+    <name>Sigil Auth contributors</name>
+  </developer>
+
+  <categories>
+    <category>Utility</category>
+    <category>Security</category>
+  </categories>
+
+  <keywords>
+    <keyword>authentication</keyword>
+    <keyword>security</keyword>
+    <keyword>tpm</keyword>
+    <keyword>yubikey</keyword>
+    <keyword>mfa</keyword>
+    <keyword>mpa</keyword>
+  </keywords>
+
+  <content_rating type="oars-1.1"/>
+
+  <supports>
+    <control>keyboard</control>
+    <control>pointing</control>
+    <control>touch</control>
+  </supports>
+
+  <recommends>
+    <display_length compare="ge">360</display_length>
+  </recommends>
+
+  <provides>
+    <binary>sigil-desktop</binary>
+  </provides>
+
+  <releases>
+    <release version="0.1.0" type="development" date="2026-04-23">
+      <description>
+        <p>Initial scaffold. Not yet functional.</p>
+      </description>
+    </release>
+  </releases>
+</component>
